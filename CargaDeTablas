@@ -1,4 +1,4 @@
- CREATE DATABASE creditcarddata;
+  CREATE DATABASE creditcarddata;
  USE creditcarddata;
 
  CREATE TABLE cardbase (
@@ -32,26 +32,59 @@ LOAD DATA INFILE 'C:/ProgramData/MySQL/MySQL Server 8.0/Data/datasets_46256_8426
 INTO TABLE cardbase 
 FIELDS TERMINATED BY ',' 
 ENCLOSED BY '"'
-LINES TERMINATED BY '\n'
+LINES TERMINATED BY '\r\n'
 IGNORE 1 ROWS;
 
 LOAD DATA INFILE 'C:/ProgramData/MySQL/MySQL Server 8.0/Data/datasets_46256_84261_CustomerBase.csv' 
 INTO TABLE customerbase
 FIELDS TERMINATED BY ',' 
 ENCLOSED BY '"'
-LINES TERMINATED BY '\n'
+LINES TERMINATED BY '\r\n'
+
 IGNORE 1 ROWS;
 
 LOAD DATA INFILE 'C:/ProgramData/MySQL/MySQL Server 8.0/Data/datasets_46256_84261_FraudBase.csv' 
 INTO TABLE fraudbase
 FIELDS TERMINATED BY ',' 
 ENCLOSED BY '"'
-LINES TERMINATED BY '\n'
+LINES TERMINATED BY '\r\n'
 IGNORE 1 ROWS;
 
 LOAD DATA INFILE 'C:/ProgramData/MySQL/MySQL Server 8.0/Data/datasets_46256_84261_TransactionBase.csv' 
 INTO TABLE transactionbase
 FIELDS TERMINATED BY ',' 
 ENCLOSED BY '"'
-LINES TERMINATED BY '\n'
+LINES TERMINATED BY '\r\n'
 IGNORE 1 ROWS;
+
+
+
+DROP view info_clientes_fraude;
+CREATE VIEW info_clientes_fraude AS
+    SELECT 
+        cb.Cust_ID,
+        crb.Cust_ID AS otro,
+        crb.Age,
+        crb.Customer_Segment,
+        cb.Card_Number,
+        tb.Transaction_ID,
+        tb.Transaction_Date,
+        tb.Transaction_Value,
+        fb.Fraud_Flag
+    FROM
+        fraudbase fb
+            LEFT JOIN
+        transactionbase tb ON fb.Transaction_ID = tb.Transaction_ID
+            LEFT JOIN
+        cardbase cb ON cb.Card_Number = tb.Credit_Card_ID
+            LEFT JOIN
+        customerbase crb ON cb.Cust_ID = crb.Cust_ID;
+
+
+
+DELIMITER $$
+CREATE PROCEDURE fraudesPorEdad ( EDAD VARCHAR(10) )
+BEGIN
+	SELECT * FROM info_clientes_fraude info WHERE info.Age = EDAD;
+END$$
+DELIMITER ;
